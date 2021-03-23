@@ -15,6 +15,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [messageId, setViewMessage] = useState("0");
   const [getMessage, setGetMessage] = useState("");
+  const [getMessageCreator, setGetMessageCreator] = useState('0x00');
 
   const handleGetCurrentWallet = async (e) => {
     e.preventDefault();
@@ -37,9 +38,12 @@ function App() {
     e.preventDefault();
     const accounts = await window.ethereum.enable();
     const account = accounts[0];
-    const result = await MessageNFTContract.methods.viewMessage(messageId).call();
-    console.log(result);
-    setGetMessage(result);
+    const message = await MessageNFTContract.methods.viewMessage(messageId).call();
+    const messageCreator = await MessageNFTContract.methods.viewMessageCreator(messageId).call();
+    console.log(message);
+    console.log(messageCreator);
+    setGetMessage(message);
+    setGetMessageCreator(messageCreator);
   }
 
   return (
@@ -71,6 +75,9 @@ function App() {
         </form>
         <p>Message retrieved: &nbsp;
         { getMessage }
+        </p>
+        <p>From: &nbsp;
+        { getMessageCreator }
         </p>
 
         <form onSubmit={handleCreateMessage}>
