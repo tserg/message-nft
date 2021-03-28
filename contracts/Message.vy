@@ -56,6 +56,9 @@ event MessageCreated:
     sender: indexed(address)
     message: String[100]
 
+# @dev Current count of token
+
+tokenId: uint256
 
 # @dev Mapping from NFT ID to the address that owns it.
 idToOwner: HashMap[uint256, address]
@@ -348,13 +351,12 @@ def setApprovalForAll(_operator: address, _approved: bool):
 ### MINT & BURN FUNCTIONS ###
 
 @external
-def mint(_to: address, _tokenId: uint256, _message: String[100]) -> bool:
+def mint(_to: address, _message: String[100]) -> bool:
     """
     @dev Function to mint tokens
          Throws if `_to` is zero address.
          Throws if `_tokenId` is owned by someone.
     @param _to The address that will receive the minted tokens.
-    @param _tokenId The token id to mint.
     @param _message The message to store
     @return A boolean that indicates if the operation was successful.
     """
@@ -362,6 +364,9 @@ def mint(_to: address, _tokenId: uint256, _message: String[100]) -> bool:
     # Throws if `_to` is zero address
     assert _to != ZERO_ADDRESS
     # Add NFT. Throws if `_tokenId` is owned by someone
+
+    _tokenId: uint256 = self.tokenId
+    self.tokenId += 1
     self._addTokenTo(_to, _tokenId)
     log Transfer(ZERO_ADDRESS, _to, _tokenId)
 
