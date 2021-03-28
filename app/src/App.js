@@ -13,6 +13,7 @@ function App() {
 
   const [getCurrentWallet, setGetCurrentWallet] = useState('0x00');
   const [message, setMessage] = useState("");
+  const [messageRecipient, setMessageRecipient] = useState("0x00");
   const [messageId, setViewMessage] = useState("0");
   const [getMessage, setGetMessage] = useState("");
   const [getMessageCreator, setGetMessageCreator] = useState('0x00');
@@ -30,7 +31,8 @@ function App() {
     const accounts = await window.ethereum.enable();
     const account = accounts[0];
     console.log(message);
-    const result = await MessageNFTContract.methods.createMessage(message).send({ from: account });
+    console.log(messageRecipient);
+    const result = await MessageNFTContract.methods.mint(messageRecipient, message).send({ from: account });
     console.log(result);
   }
 
@@ -89,6 +91,15 @@ function App() {
               name="name"
               value={message}
               onChange={ e => setMessage(e.target.value) } />
+          </label>
+          
+          <label>
+            Address to send message to: &nbsp;
+            <input
+              type="text"
+              name="name"
+              value={messageRecipient}
+              onChange={ e => setMessageRecipient(e.target.value) } />
           </label>
           <input type="submit" value="Create" />
           </p>
