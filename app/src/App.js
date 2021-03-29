@@ -32,8 +32,17 @@ function App() {
     const account = accounts[0];
     console.log(message);
     console.log(messageRecipient);
-    const result = await MessageNFTContract.methods.mint(messageRecipient, message).send({ from: account });
-    console.log(result);
+
+    if (message.length == 0) {
+      alert('You have not entered a message.');
+    } else if (message.length == 100) {
+      alert('Your message is longer than 100 characters.');
+    } else if (!web3.utils.isAddress(messageRecipient)) {
+      alert('You have not entered a valid receiving address.');
+    } else {
+      const result = await MessageNFTContract.methods.mint(messageRecipient, message).send({ from: account });
+      console.log(result);
+    }
   }
 
   const handleRetrieveMessage = async (e) => {
@@ -44,6 +53,11 @@ function App() {
     const messageCreator = await MessageNFTContract.methods.viewMessageCreator(messageId).call();
     console.log(message);
     console.log(messageCreator);
+
+    if (message == '' && messageCreator == '0x0000000000000000000000000000000000000000') {
+        alert('This message token does not exist.');
+    }
+
     setGetMessage(message);
     setGetMessageCreator(messageCreator);
   }
@@ -64,15 +78,17 @@ function App() {
 
         <form onSubmit={handleRetrieveMessage}>
           <p>
-          <label>
-            Message to retrieve: &nbsp;
-            <input
-              type="number"
-              name="name"
-              value={messageId}
-              onChange={ e => setViewMessage(e.target.value) } />
-          </label>
-          <input type="submit" value="Retrieve" />
+            <label>
+              Enter token ID to retrieve message: &nbsp;
+              <input
+                type="number"
+                name="name"
+                value={messageId}
+                onChange={ e => setViewMessage(e.target.value) } />
+            </label>
+          </p>
+          <p>
+            <input type="submit" value="Retrieve" />
           </p>
         </form>
         <p>Message retrieved: &nbsp;
@@ -84,24 +100,27 @@ function App() {
 
         <form onSubmit={handleCreateMessage}>
           <p>
-          <label>
-            Message to create: &nbsp;
-            <input
-              type="text"
-              name="name"
-              value={message}
-              onChange={ e => setMessage(e.target.value) } />
-          </label>
-          
-          <label>
-            Address to send message to: &nbsp;
-            <input
-              type="text"
-              name="name"
-              value={messageRecipient}
-              onChange={ e => setMessageRecipient(e.target.value) } />
-          </label>
-          <input type="submit" value="Create" />
+            <label>
+              Message to create: &nbsp;
+              <input
+                type="text"
+                name="name"
+                value={message}
+                onChange={ e => setMessage(e.target.value) } />
+            </label>
+          </p>
+          <p>
+            <label>
+              Address to send message to: &nbsp;
+              <input
+                type="text"
+                name="name"
+                value={messageRecipient}
+                onChange={ e => setMessageRecipient(e.target.value) } />
+            </label>
+          </p>
+          <p>
+            <input type="submit" value="Create" />
           </p>
         </form>
       </header>
