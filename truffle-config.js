@@ -18,8 +18,13 @@
  *
  */
 
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
-// const infuraKey = "fj4jll3k.....";
+const path = __dirname + '/.env';
+require('dotenv').config({path: path});
+
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+const ENDPOINT_URL = process.env.ENDPOINT_URL;
+const MNEMONIC = process.env.MNEMONIC;
+
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -47,6 +52,17 @@ module.exports = {
       port: 8545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
     },
+    ropsten: {
+      // must be a thunk, otherwise truffle commands may hang in CI
+      provider: () =>
+        new HDWalletProvider({
+          mnemonic: {
+            phrase: MNEMONIC
+          },
+          providerOrUrl: ENDPOINT_URL,
+        }),
+      network_id: 3,
+    }
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port

@@ -1,2 +1,4 @@
 /build/contracts/
 /app/node_modules/
+.env
+/node_modules

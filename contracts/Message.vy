@@ -17,6 +17,18 @@ interface ERC721Receiver:
             _data: Bytes[1024]
         ) -> bytes32: view
 
+interface ERC721Metadata:
+    def name(
+            _name: String[64]
+        ) -> String[64]: view
+
+    def symbol(
+            _symbol: String[32]
+        ) -> String[32]: view
+
+    def tokenURI(
+            _tokenId: uint256
+        ) -> String[128]: view
 
 # @dev Emits when ownership of any NFT changes by any mechanism. This event emits when NFTs are
 #      created (`from` == 0) and destroyed (`to` == 0). Exception: during contract creation, any
@@ -56,8 +68,10 @@ event MessageCreated:
     sender: indexed(address)
     message: String[100]
 
+name: public(String[64])
+symbol: public(String[32])
+owner: address
 # @dev Current count of token
-
 tokenId: uint256
 
 # @dev Mapping from NFT ID to the address that owns it.
@@ -72,6 +86,9 @@ ownerToNFTokenCount: HashMap[address, uint256]
 # @dev Mapping from owner address to mapping of operator addresses.
 ownerToOperators: HashMap[address, HashMap[address, bool]]
 
+# @dev Address of URI contract
+tokenBaseURI: public(String[128])
+
 # @dev Mapping of interface id to bool about whether or not it's supported
 supportedInterfaces: HashMap[bytes32, bool]
 
@@ -80,6 +97,9 @@ ERC165_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000
 
 # @dev ERC165 interface ID of ERC721
 ERC721_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000000000000000000000080ac58cd
+
+# @dev ERC165 interface ID of ERC721 Metadata
+ERC721_METADATA_INTERFACE_ID: constant(bytes32) = 0x000000000000000000000000000000000000000000000000000000005b5e139f
 
 # @dev Mapping from NFT ID to message.
 idToMessage: HashMap[uint256, String[100]]
@@ -93,8 +113,14 @@ def __init__():
     """
     @dev Contract constructor.
     """
+    self.name = 'Immutable Message Version 0'
+    self.symbol = 'IMESSAGE0'
+    self.owner = msg.sender
+    self.tokenBaseURI = ''
     self.supportedInterfaces[ERC165_INTERFACE_ID] = True
     self.supportedInterfaces[ERC721_INTERFACE_ID] = True
+    self.supportedInterfaces[ERC721_METADATA_INTERFACE_ID] = True
+    self.tokenId = 0
 
 
 @view
@@ -168,6 +194,15 @@ def viewMessage(_tokenId: uint256) -> String[100]:
 @external
 def viewMessageCreator(_tokenId: uint256) -> address:
     return self.idToMessageCreator[_tokenId]
+
+@view
+@external
+def tokenURI(_tokenId: uint256) -> String[128]:
+    """
+    @dev Returns current token URI metadata
+    @param _tokenId Token ID to fetch URI for.
+    """
+    return self.tokenBaseURI
 
 ### TRANSFER FUNCTION HELPERS ###
 
@@ -394,3 +429,13 @@ def burn(_tokenId: uint256):
     self._clearApproval(owner, _tokenId)
     self._removeTokenFrom(owner, _tokenId)
     log Transfer(owner, ZERO_ADDRESS, _tokenId)
+
+@external
+def setTokenURI(_tokenURI: String[128]):
+    """
+    @dev  Set token URI contract address
+          Throws unless `msg.sender` is the current owner
+    @param _tokenURI URI to set
+    """
+    assert msg.sender == self.owner
+    self.tokenBaseURI = _tokenURI

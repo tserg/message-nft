@@ -7,6 +7,7 @@ import Web3 from 'web3';
 
 const web3 = new Web3(Web3.givenProvider);
 const { REACT_APP_CONTRACT_ADDR } = process.env;
+
 const MessageNFTContract = new web3.eth.Contract(MessageNFT_Abi, REACT_APP_CONTRACT_ADDR);
 
 function App() {
