@@ -188,12 +188,42 @@ def isApprovedForAll(_owner: address, _operator: address) -> bool:
 @view
 @external
 def viewMessage(_tokenId: uint256) -> String[100]:
+    """
+    @dev Get the message of a single NFT.
+         Throws if `_tokenId` is not a valid NFT.
+    @param _tokenId ID of the NFT to query the approval of.
+    """
+    # Throws if `_tokenId` is not a valid NFT
+    assert self.idToOwner[_tokenId] != ZERO_ADDRESS
     return self.idToMessage[_tokenId]
 
 @view
 @external
 def viewMessageCreator(_tokenId: uint256) -> address:
+    """
+    @dev Get the creator of a single NFT.
+         Throws if `_tokenId` is not a valid NFT.
+    @param _tokenId ID of the NFT to query the approval of.
+    """
+    # Throws if `_tokenId` is not a valid NFT
+    assert self.idToOwner[_tokenId] != ZERO_ADDRESS
     return self.idToMessageCreator[_tokenId]
+
+@view
+@external
+def name() -> String[64]:
+    """
+    @dev Get the name of the NFT.
+    """
+    return self.name
+
+@view
+@external
+def symbol() -> String[32]:
+    """
+    @dev Get the symbol of the NFT.
+    """
+    return self.symbol
 
 @view
 @external
