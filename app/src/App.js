@@ -12,6 +12,7 @@ const MessageNFTContract = new web3.eth.Contract(MessageNFT_Abi, REACT_APP_CONTR
 
 function App() {
 
+  const [getCurrentChain, setGetCurrentChain] = useState('');
   const [getCurrentWallet, setGetCurrentWallet] = useState('0x00');
   const [message, setMessage] = useState("");
   const [messageRecipient, setMessageRecipient] = useState("0x00");
@@ -19,8 +20,26 @@ function App() {
   const [getMessage, setGetMessage] = useState("");
   const [getMessageCreator, setGetMessageCreator] = useState('0x00');
 
-  const handleGetCurrentWallet = async (e) => {
-    e.preventDefault();
+  const handleGetInfo = async (e) => {
+    handleGetCurrentChain();
+    handleGetCurrentWallet();
+  }
+  const handleGetCurrentChain = async () => {
+    const currentChain = await web3.eth.getChainId();
+
+    if (currentChain == 3) {
+      var currentChainDescription = 'Ropsten';
+    } else if (currentChain == 1) {
+      var currentChainDescription = 'Mainnet';
+    } else {
+      var currentChainDescription = 'Localhost';
+    }
+
+    setGetCurrentChain(currentChainDescription);
+
+  }
+
+  const handleGetCurrentWallet = async () => {
     const accounts = await window.ethereum.enable();
     const account = accounts[0];
     setGetCurrentWallet(account);
@@ -68,10 +87,14 @@ function App() {
       <header className="App-header">
 
         <button
-          onClick={handleGetCurrentWallet}
+          onClick={handleGetInfo}
           type="button" >
           Connect Wallet
         </button>
+        <p>
+          Current Chain: &nbsp;
+          { getCurrentChain }
+        </p>
         <p>
           Current Wallet: &nbsp;
           { getCurrentWallet }
