@@ -68,8 +68,8 @@ event MessageCreated:
     sender: indexed(address)
     message: String[100]
 
-name: public(String[64])
-symbol: public(String[32])
+tokenName: public(String[64])
+tokenSymbol: public(String[32])
 owner: address
 # @dev Current count of token
 tokenId: uint256
@@ -113,8 +113,8 @@ def __init__():
     """
     @dev Contract constructor.
     """
-    self.name = 'Immutable Message Version 0'
-    self.symbol = 'IMESSAGE0'
+    self.tokenName = 'Immutable Message Version 0'
+    self.tokenSymbol = 'IMESSAGE0'
     self.owner = msg.sender
     self.tokenBaseURI = ''
     self.supportedInterfaces[ERC165_INTERFACE_ID] = True
@@ -215,7 +215,7 @@ def name() -> String[64]:
     """
     @dev Get the name of the NFT.
     """
-    return self.name
+    return self.tokenName
 
 @view
 @external
@@ -223,7 +223,7 @@ def symbol() -> String[32]:
     """
     @dev Get the symbol of the NFT.
     """
-    return self.symbol
+    return self.tokenSymbol
 
 @view
 @external
