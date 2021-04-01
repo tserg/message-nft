@@ -109,12 +109,12 @@ idToMessageCreator: HashMap[uint256, address]
 
 
 @external
-def __init__():
+def __init__(_tokenName: String[64], _tokenSymbol: String[32]):
     """
     @dev Contract constructor.
     """
-    self.tokenName = 'Immutable Message Version 0'
-    self.tokenSymbol = 'IMESSAGE0'
+    self.tokenName = _tokenName
+    self.tokenSymbol = _tokenSymbol
     self.owner = msg.sender
     self.tokenBaseURI = ''
     self.supportedInterfaces[ERC165_INTERFACE_ID] = True
