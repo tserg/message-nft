@@ -1,4 +1,7 @@
-/build/contracts/
+/build
 /app/node_modules/
 .env
 /node_modules
+
+/tests/__pycache__
+/.pytest_cache
