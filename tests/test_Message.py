@@ -1,6 +1,6 @@
 import pytest
 
-from brownie import accounts
+from brownie import accounts, reverts
 
 TOKEN_NAME = 'Immutable Message Version 0'
 TOKEN_SYMBOL = 'IMESSAGE0'
@@ -45,3 +45,12 @@ def test_message_transfer(MessageNFTContract, accounts):
     assert tx1.events[0]['tokenId'] == 0
     assert tx1.events[0]['sender'] == accounts[1]
     assert tx1.events[0]['receiver'] == accounts[2]
+
+def test_non_owner_transfer(MessageNFTContract, accounts):
+
+    with reverts():
+        MessageNFTContract.transferFrom(accounts[2], accounts[1], 0, {'from': accounts[1]})
+
+    assert MessageNFTContract.balanceOf(accounts[1]) == 0
+    assert MessageNFTContract.balanceOf(accounts[2]) == 1
+    assert MessageNFTContract.ownerOf(0) == accounts[2]
