@@ -2,13 +2,11 @@ import pytest
 
 from brownie import accounts, reverts
 
-TOKEN_NAME = 'Immutable Message Version 0'
-TOKEN_SYMBOL = 'IMESSAGE0'
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 @pytest.fixture(scope="module")
 def MessageNFTContract(Message, accounts):
-    yield Message.deploy(TOKEN_NAME, TOKEN_SYMBOL, {'from': accounts[0]})
+    yield Message.deploy({'from': accounts[0]})
 
 def test_message_creation(MessageNFTContract, accounts):
 
@@ -46,7 +44,7 @@ def test_message_transfer(MessageNFTContract, accounts):
     assert tx1.events[0]['sender'] == accounts[1]
     assert tx1.events[0]['receiver'] == accounts[2]
 
-def test_non_owner_transfer(MessageNFTContract, accounts):
+def test_non_approved_transfer(MessageNFTContract, accounts):
 
     with reverts():
         MessageNFTContract.transferFrom(accounts[2], accounts[1], 0, {'from': accounts[1]})
@@ -54,3 +52,15 @@ def test_non_owner_transfer(MessageNFTContract, accounts):
     assert MessageNFTContract.balanceOf(accounts[1]) == 0
     assert MessageNFTContract.balanceOf(accounts[2]) == 1
     assert MessageNFTContract.ownerOf(0) == accounts[2]
+
+def test_approved_transfer(MessageNFTContract, accounts):
+
+    tx1 = MessageNFTContract.approve(accounts[0], 0, {'from': accounts[2]})
+
+    assert MessageNFTContract.getApproved(0) == accounts[0]
+
+    tx2 = MessageNFTContract.transferFrom(accounts[2], accounts[1], 0, {'from': accounts[0]})
+
+    assert MessageNFTContract.balanceOf(accounts[1]) == 1
+    assert MessageNFTContract.balanceOf(accounts[2]) == 0
+    assert MessageNFTContract.ownerOf(0) == accounts[1]

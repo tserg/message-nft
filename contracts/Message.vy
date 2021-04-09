@@ -68,8 +68,8 @@ event MessageCreated:
     sender: indexed(address)
     message: String[100]
 
-tokenName: public(String[64])
-tokenSymbol: public(String[32])
+tokenName: String[64]
+tokenSymbol: String[32]
 owner: address
 # @dev Current count of token
 tokenId: uint256
@@ -109,14 +109,14 @@ idToMessageCreator: HashMap[uint256, address]
 
 
 @external
-def __init__(_tokenName: String[64], _tokenSymbol: String[32]):
+def __init__():
     """
     @dev Contract constructor.
     """
-    self.tokenName = _tokenName
-    self.tokenSymbol = _tokenSymbol
+    self.tokenName = 'Immutable Messages V0'
+    self.tokenSymbol = 'IMSG'
     self.owner = msg.sender
-    self.tokenBaseURI = ''
+    self.tokenBaseURI = 'https://raw.githubusercontent.com/tserg/message-nft/main/IMSG_metadata'
     self.supportedInterfaces[ERC165_INTERFACE_ID] = True
     self.supportedInterfaces[ERC721_INTERFACE_ID] = True
     self.supportedInterfaces[ERC721_METADATA_INTERFACE_ID] = True
@@ -413,7 +413,7 @@ def setApprovalForAll(_operator: address, _approved: bool):
     log ApprovalForAll(msg.sender, _operator, _approved)
 
 
-### MINT & BURN FUNCTIONS ###
+### MINT FUNCTION ###
 
 @external
 def mint(_to: address, _message: String[100]) -> bool:
@@ -440,25 +440,6 @@ def mint(_to: address, _message: String[100]) -> bool:
     log MessageCreated(msg.sender, _message)
 
     return True
-
-
-@external
-def burn(_tokenId: uint256):
-    """
-    @dev Burns a specific ERC721 token.
-         Throws unless `msg.sender` is the current owner, an authorized operator, or the approved
-         address for this NFT.
-         Throws if `_tokenId` is not a valid NFT.
-    @param _tokenId uint256 id of the ERC721 token to be burned.
-    """
-    # Check requirements
-    assert self._isApprovedOrOwner(msg.sender, _tokenId)
-    owner: address = self.idToOwner[_tokenId]
-    # Throws if `_tokenId` is not a valid NFT
-    assert owner != ZERO_ADDRESS
-    self._clearApproval(owner, _tokenId)
-    self._removeTokenFrom(owner, _tokenId)
-    log Transfer(owner, ZERO_ADDRESS, _tokenId)
 
 @external
 def setTokenURI(_tokenURI: String[128]):
