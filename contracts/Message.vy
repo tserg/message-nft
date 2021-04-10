@@ -80,6 +80,10 @@ idToOwner: HashMap[uint256, address]
 # @dev Mapping from NFT ID to approved address.
 idToApprovals: HashMap[uint256, address]
 
+# @dev Mapping from NFT ID to whether message is private
+
+idToPrivateMessage: HashMap[uint256, bool]
+
 # @dev Mapping from owner address to count of his tokens.
 ownerToNFTokenCount: HashMap[address, uint256]
 
@@ -186,6 +190,17 @@ def isApprovedForAll(_owner: address, _operator: address) -> bool:
 
 
 @view
+@internal
+def _isPrivateMessage(_tokenId: uint256) -> bool:
+    """
+        @dev Returns whether the given token ID is a private message that can only be viewed by the owner
+        @param tokenId uint256 ID of the token to be viewed
+        @return bool whether the given token ID can be viewed by the owner of the token only
+    """
+    return self.idToPrivateMessage[_tokenId]
+
+
+@view
 @external
 def viewMessage(_tokenId: uint256) -> String[100]:
     """
@@ -195,6 +210,10 @@ def viewMessage(_tokenId: uint256) -> String[100]:
     """
     # Throws if `_tokenId` is not a valid NFT
     assert self.idToOwner[_tokenId] != ZERO_ADDRESS
+
+    if self._isPrivateMessage(_tokenId):
+        assert self.idToOwner[_tokenId] == msg.sender
+
     return self.idToMessage[_tokenId]
 
 @view
@@ -317,13 +336,17 @@ def _transferFrom(_from: address, _to: address, _tokenId: uint256, _sender: addr
     # Log the transfer
     log Transfer(_from, _to, _tokenId)
 
+### MESSAGE FUNCTION HELPERS ###
+
+
 @internal
-def _createMessage(_from: address, _tokenId: uint256, _message: String[100]):
-  """
-  @dev Store message
-  """
-  self.idToMessage[_tokenId] = _message
-  self.idToMessageCreator[_tokenId] = _from
+def _createMessage(_from: address, _tokenId: uint256, _message: String[100], _isPrivateMessage: bool):
+    """
+    @dev Store message
+    """
+    self.idToMessage[_tokenId] = _message
+    self.idToMessageCreator[_tokenId] = _from
+    self.idToPrivateMessage[_tokenId] = _isPrivateMessage
 
 ### TRANSFER FUNCTIONS ###
 
@@ -416,7 +439,7 @@ def setApprovalForAll(_operator: address, _approved: bool):
 ### MINT FUNCTION ###
 
 @external
-def mint(_to: address, _message: String[100]) -> bool:
+def mint(_to: address, _message: String[100], _isPrivate: bool) -> bool:
     """
     @dev Function to mint tokens
          Throws if `_to` is zero address.
@@ -436,7 +459,7 @@ def mint(_to: address, _message: String[100]) -> bool:
     log Transfer(ZERO_ADDRESS, _to, _tokenId)
 
     # Create message
-    self._createMessage(msg.sender, _tokenId, _message)
+    self._createMessage(msg.sender, _tokenId, _message, _isPrivate)
     log MessageCreated(msg.sender, _message)
 
     return True
