@@ -17,6 +17,8 @@ interface ERC721Receiver:
             _data: Bytes[1024]
         ) -> bytes32: view
 
+# Interface for ERC721Metadata
+
 interface ERC721Metadata:
     def name(
             _name: String[64]
@@ -29,6 +31,21 @@ interface ERC721Metadata:
     def tokenURI(
             _tokenId: uint256
         ) -> String[128]: view
+
+# Interface for ERC721Enumerable
+
+interface ERC721Enumerable:
+
+    def totalSupply() -> uint256: view
+
+    def tokenByIndex(
+        _tokenId: uint256
+    ) -> uint256: view
+
+    def tokenOfOwnerByIndex(
+        _owner: address,
+        _tokenId: uint256
+    ) -> uint256: view
 
 # @dev Emits when ownership of any NFT changes by any mechanism. This event emits when NFTs are
 #      created (`from` == 0) and destroyed (`to` == 0). Exception: during contract creation, any
@@ -102,8 +119,12 @@ ERC165_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000
 # @dev ERC165 interface ID of ERC721
 ERC721_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000000000000000000000080ac58cd
 
-# @dev ERC165 interface ID of ERC721 Metadata
+# @dev ERC165 interface ID of ERC721Metadata
 ERC721_METADATA_INTERFACE_ID: constant(bytes32) = 0x000000000000000000000000000000000000000000000000000000005b5e139f
+
+# @dev ERC165 interface ID of ERC721Enumerable
+
+ERC721_ENUMERABLE_INTERFACE_ID: constant(bytes32) = 0x00000000000000000000000000000000000000000000000000000000780e9d63
 
 # @dev Mapping from NFT ID to message.
 idToMessage: HashMap[uint256, String[100]]
@@ -124,6 +145,7 @@ def __init__():
     self.supportedInterfaces[ERC165_INTERFACE_ID] = True
     self.supportedInterfaces[ERC721_INTERFACE_ID] = True
     self.supportedInterfaces[ERC721_METADATA_INTERFACE_ID] = True
+    self.supportedInterfaces[ERC721_ENUMERABLE_INTERFACE_ID] = True
     self.tokenId = 0
 
 
@@ -206,6 +228,7 @@ def viewMessage(_tokenId: uint256) -> String[100]:
     """
     @dev Get the message of a single NFT.
          Throws if `_tokenId` is not a valid NFT.
+         Throws if message is private and msg.sender is not owner
     @param _tokenId ID of the NFT to query the approval of.
     """
     # Throws if `_tokenId` is not a valid NFT
@@ -222,10 +245,15 @@ def viewMessageCreator(_tokenId: uint256) -> address:
     """
     @dev Get the creator of a single NFT.
          Throws if `_tokenId` is not a valid NFT.
+         Throws if message is private and msg.sender is not owner
     @param _tokenId ID of the NFT to query the approval of.
     """
     # Throws if `_tokenId` is not a valid NFT
     assert self.idToOwner[_tokenId] != ZERO_ADDRESS
+
+    if self._isPrivateMessage(_tokenId):
+        assert self.idToOwner[_tokenId] == msg.sender
+
     return self.idToMessageCreator[_tokenId]
 
 @view
@@ -252,6 +280,30 @@ def tokenURI(_tokenId: uint256) -> String[128]:
     @param _tokenId Token ID to fetch URI for.
     """
     return self.tokenBaseURI
+
+@view
+@external
+def tokenSupply() -> uint256:
+    """
+    @dev  Get the total number of tokens
+    """
+    return self.tokenId
+
+@view
+@external
+def tokenByIndex(_tokenId: uint256) -> uint256:
+    """
+    @dev  Get token by index
+    """
+    return 0
+
+@view
+@external
+def tokenOfOwnerByIndex(_owner: address, _tokenId: uint256) -> uint256:
+    """
+    @dev  Get token by index
+    """
+    return 0
 
 ### TRANSFER FUNCTION HELPERS ###
 
