@@ -1,11 +1,7 @@
 /build
-/app/node_modules/
 .env
-/node_modules
 
 /tests/__pycache__
 /.pytest_cache
-
-.brownie-config.yaml
 
 /scripts/__pycache__

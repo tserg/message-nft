@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "@truffle/hdwallet-provider": "^1.2.3",
-    "dotenv": "^8.2.0"
-  },
-  "scripts": {
-    "start": "node app/src/App.js"
-  }
-}
