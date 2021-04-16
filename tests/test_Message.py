@@ -19,6 +19,8 @@ def test_message_creation(MessageNFTContract, accounts):
 
     assert len(tx1.events) == 2
 
+    assert MessageNFTContract.tokenOfOwnerByIndex(accounts[1], 1) == 0
+
     # Check Transfer event
     assert tx1.events[0]['tokenId'] == 0
     assert tx1.events[0]['sender'] == ZERO_ADDRESS
@@ -27,7 +29,6 @@ def test_message_creation(MessageNFTContract, accounts):
     # Check MessageCreated event
     assert tx1.events[1]['message'] == 'Hello World!'
     assert tx1.events[1]['sender'] == accounts[0]
-
 
 def test_message_transfer(MessageNFTContract, accounts):
 
@@ -38,6 +39,10 @@ def test_message_transfer(MessageNFTContract, accounts):
     assert MessageNFTContract.ownerOf(0) == accounts[2]
     assert MessageNFTContract.viewMessage(0, {'from': accounts[2]}) == 'Hello World!'
     assert MessageNFTContract.viewMessageCreator(0, {'from': accounts[2]}) == accounts[0]
+
+    assert MessageNFTContract.tokenOfOwnerByIndex(accounts[2], 1) == 0
+    with reverts():
+        assert MessageNFTContract.tokenOfOwnerByIndex(accounts[1], 1) 
 
     # Check Transfer event
     assert tx1.events[0]['tokenId'] == 0

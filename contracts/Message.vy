@@ -88,6 +88,7 @@ event MessageCreated:
 tokenName: String[64]
 tokenSymbol: String[32]
 owner: address
+
 # @dev Current count of token
 tokenId: uint256
 
@@ -99,6 +100,12 @@ idToApprovals: HashMap[uint256, address]
 
 # @dev Mapping from owner address to count of his tokens.
 ownerToNFTokenCount: HashMap[address, uint256]
+
+# @dev Mapping from owner address to mapping of index to tokenIds
+ownerToNFTokenIdList: HashMap[address, HashMap[uint256, uint256]]
+
+# @dev Mapping from NFT ID to index of owner
+tokenToOwnerIndex: HashMap[uint256, uint256]
 
 # @dev Mapping from owner address to mapping of operator addresses.
 ownerToOperators: HashMap[address, HashMap[address, bool]]
@@ -156,6 +163,16 @@ def supportsInterface(_interfaceID: bytes32) -> bool:
 
 
 ### VIEW FUNCTIONS ###
+@view
+@internal
+def _balanceOf(_owner: address) -> uint256:
+    """
+    @dev Returns the number of NFTs owned by `_owner`.
+         Throws if `_owner` is the zero address. NFTs assigned to the zero address are considered invalid.
+    @param _owner Address for whom to query the balance.
+    """
+    assert _owner != ZERO_ADDRESS
+    return self.ownerToNFTokenCount[_owner]
 
 @view
 @external
@@ -165,8 +182,7 @@ def balanceOf(_owner: address) -> uint256:
          Throws if `_owner` is the zero address. NFTs assigned to the zero address are considered invalid.
     @param _owner Address for whom to query the balance.
     """
-    assert _owner != ZERO_ADDRESS
-    return self.ownerToNFTokenCount[_owner]
+    return self._balanceOf(_owner)
 
 
 @view
@@ -232,6 +248,8 @@ def viewMessageCreator(_tokenId: uint256) -> address:
 
     return self.idToMessageCreator[_tokenId]
 
+#   Implementation of ERC721Metadata
+
 @view
 @external
 def name() -> String[64]:
@@ -257,6 +275,8 @@ def tokenURI(_tokenId: uint256) -> String[128]:
     """
     return self.tokenBaseURI
 
+#   Implementation of ERC721Enumerable
+
 @view
 @external
 def tokenSupply() -> uint256:
@@ -270,16 +290,20 @@ def tokenSupply() -> uint256:
 def tokenByIndex(_tokenId: uint256) -> uint256:
     """
     @dev  Get token by index
+          Throws if '_tokenId' is larger than totalSupply()
     """
-    return 0
+    assert _tokenId <= self.tokenId
+
+    return self.tokenId
 
 @view
 @external
-def tokenOfOwnerByIndex(_owner: address, _tokenId: uint256) -> uint256:
+def tokenOfOwnerByIndex(_owner: address, _tokenIndex: uint256) -> uint256:
     """
     @dev  Get token by index
     """
-    return 0
+    assert _tokenIndex <= self._balanceOf(_owner)
+    return self.ownerToNFTokenIdList[_owner][_tokenIndex]
 
 ### TRANSFER FUNCTION HELPERS ###
 
@@ -299,6 +323,49 @@ def _isApprovedOrOwner(_spender: address, _tokenId: uint256) -> bool:
     spenderIsApprovedForAll: bool = (self.ownerToOperators[owner])[_spender]
     return (spenderIsOwner or spenderIsApproved) or spenderIsApprovedForAll
 
+@internal
+def _addTokenToOwnerList(_to: address, _tokenId: uint256):
+    """
+    @dev Add a NFT to an index mapping to a given address
+    @param to address of the receiver
+    @param tokenId uint256 ID Of the token to be added
+    """
+    current_count: uint256 = self._balanceOf(_to)
+
+    self.ownerToNFTokenIdList[_to][current_count] = _tokenId
+    self.tokenToOwnerIndex[_tokenId] = current_count
+
+@internal
+def _removeTokenFromOwnerList(_from: address, _tokenId: uint256):
+    """
+    @dev Remove a NFT from an index mapping to a given address
+    @param from address of the sender
+    @param tokenId uint256 ID Of the token to be removed
+    """
+    # Delete
+    current_count: uint256 = self._balanceOf(_from)
+    current_index: uint256 = self.tokenToOwnerIndex[_tokenId]
+
+    if current_count == current_index:
+        # update ownerToNFTokenIdList
+        self.ownerToNFTokenIdList[_from][current_count] = 0
+        # update tokenToOwnerIndex
+        self.tokenToOwnerIndex[_tokenId] = 0
+
+    else:
+        lastTokenId: uint256 = self.ownerToNFTokenIdList[_from][current_count]
+
+        # Add
+        # update ownerToNFTokenIdList
+        self.ownerToNFTokenIdList[_from][current_index] = lastTokenId
+        # update tokenToOwnerIndex
+        self.tokenToOwnerIndex[lastTokenId] = current_index
+
+        # Delete
+        # update ownerToNFTokenIdList
+        self.ownerToNFTokenIdList[_from][current_count] = 0
+        # update tokenToOwnerIndex
+        self.tokenToOwnerIndex[_tokenId] = 0
 
 @internal
 def _addTokenTo(_to: address, _tokenId: uint256):
@@ -312,7 +379,8 @@ def _addTokenTo(_to: address, _tokenId: uint256):
     self.idToOwner[_tokenId] = _to
     # Change count tracking
     self.ownerToNFTokenCount[_to] += 1
-
+    # Update owner token index tracking
+    self._addTokenToOwnerList(_to, _tokenId)
 
 @internal
 def _removeTokenFrom(_from: address, _tokenId: uint256):
@@ -324,6 +392,8 @@ def _removeTokenFrom(_from: address, _tokenId: uint256):
     assert self.idToOwner[_tokenId] == _from
     # Change the owner
     self.idToOwner[_tokenId] = ZERO_ADDRESS
+    # Update owner token index tracking
+    self._removeTokenFromOwnerList(_from, _tokenId)
     # Change count tracking
     self.ownerToNFTokenCount[_from] -= 1
 
