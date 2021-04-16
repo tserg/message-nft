@@ -10,7 +10,7 @@ def MessageNFTContract(Message, accounts):
 
 def test_message_creation(MessageNFTContract, accounts):
 
-    tx1 = MessageNFTContract.mint(accounts[1], 'Hello World!', True, {'from': accounts[0]})
+    tx1 = MessageNFTContract.mint(accounts[1], 'Hello World!', {'from': accounts[0]})
 
     assert MessageNFTContract.balanceOf(accounts[1]) == 1
     assert MessageNFTContract.ownerOf(0) == accounts[1]
@@ -64,8 +64,3 @@ def test_approved_transfer(MessageNFTContract, accounts):
     assert MessageNFTContract.balanceOf(accounts[1]) == 1
     assert MessageNFTContract.balanceOf(accounts[2]) == 0
     assert MessageNFTContract.ownerOf(0) == accounts[1]
-
-def test_unauthorised_view_private_message(MessageNFTContract, accounts):
-
-    with reverts():
-        MessageNFTContract.viewMessage(0, {'from': accounts[0]})
