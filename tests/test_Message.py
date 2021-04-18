@@ -93,3 +93,24 @@ def test_token_transfer_multiple_existing_tokens(MessageNFTContract, accounts):
     with reverts():
         MessageNFTContract.tokenOfOwnerByIndex(accounts[0], 2)
     assert MessageNFTContract.tokenOfOwnerByIndex(accounts[0], 1) == 1
+
+def test_token_transfer_multiple_existing_tokens_2(MessageNFTContract, accounts):
+
+    tx1 = MessageNFTContract.mint(accounts[1], 'Third time around', {'from': accounts[1]})
+    tx2 = MessageNFTContract.transferFrom(accounts[0], accounts[1], 1, {'from': accounts[0]})
+
+    assert MessageNFTContract.tokenByIndex(3) == 3
+
+    assert MessageNFTContract.balanceOf(accounts[1]) == 3
+    assert MessageNFTContract.tokenOfOwnerByIndex(accounts[1], 1) == 2
+    assert MessageNFTContract.tokenOfOwnerByIndex(accounts[1], 2) == 3
+    assert MessageNFTContract.tokenOfOwnerByIndex(accounts[1], 3) == 1
+
+    tx3 = MessageNFTContract.transferFrom(accounts[1], accounts[2], 1, {'from': accounts[1]})
+
+    assert MessageNFTContract.balanceOf(accounts[1]) == 2
+    with reverts():
+        MessageNFTContract.tokenOfOwnerByIndex(accounts[1], 3)
+
+    assert MessageNFTContract.balanceOf(accounts[2]) == 1
+    assert MessageNFTContract.tokenOfOwnerByIndex(accounts[2], 1) == 1
