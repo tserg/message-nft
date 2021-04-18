@@ -301,8 +301,13 @@ def tokenByIndex(_tokenId: uint256) -> uint256:
 def tokenOfOwnerByIndex(_owner: address, _tokenIndex: uint256) -> uint256:
     """
     @dev  Get token by index
+          Throws if '_tokenIndex' is larger than balance of '_owner'
+          Throws if value has been set to 0
     """
     assert _tokenIndex <= self._balanceOf(_owner)
+
+    # Checks if token has been transferred and set to default value of 0
+    assert self.ownerToNFTokenIdList[_owner][_tokenIndex] != 0
     return self.ownerToNFTokenIdList[_owner][_tokenIndex]
 
 ### TRANSFER FUNCTION HELPERS ###
@@ -549,9 +554,9 @@ def mint(_to: address, _message: String[100]) -> bool:
     # Throws if `_to` is zero address
     assert _to != ZERO_ADDRESS
     # Add NFT. Throws if `_tokenId` is owned by someone
-
-    _tokenId: uint256 = self.tokenId
     self.tokenId += 1
+    _tokenId: uint256 = self.tokenId
+
     self._addTokenTo(_to, _tokenId)
     log Transfer(ZERO_ADDRESS, _to, _tokenId)
 
